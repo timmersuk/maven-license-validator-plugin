@@ -82,7 +82,7 @@
       <div id="contentBox">
         <!--  --><!-- Copyright (C) 2011 tdarby <tim.darby.uk@googlemail.com> --><!--  --><!-- Licensed under the Apache License, Version 2.0 (the "License"); --><!-- you may not use this file except in compliance with the License. --><!-- You may obtain a copy of the License at --><!--  --><!-- http://www.apache.org/licenses/LICENSE-2.0 --><!--  --><!-- Unless required by applicable law or agreed to in writing, software --><!-- distributed under the License is distributed on an "AS IS" BASIS, --><!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. --><!-- See the License for the specific language governing permissions and --><!-- limitations under the License. --><!--  --><div><pre>  Usage
   ------
-  Alain Marion
+  Tim Darby
   ------
   September 2009
   ------
@@ -91,44 +91,45 @@ Usage
 
 * Introduction
 
-  The googlecode Plugin has only one function that will publish you project distribution to
-  the project's googlecode download area.
-  This plugin is intended to be run during the maven &lt;&lt;&lt;deploy&gt;&gt;&gt; phase of the build lifecycle
-  and is implemented using the &lt;&lt;&lt;googlecode:deploy&gt;&gt;&gt; mojo.
+  The License Validator Plugin has only one function that will validate the dependencies on your
+  project
+  This plugin is intended to be run during the maven &lt;&lt;&lt;validate&gt;&gt;&gt; phase of the build lifecycle
+  and is implemented using the &lt;&lt;&lt;license-validator:validate-licenses&gt;&gt;&gt; mojo.
 
-* The &lt;&lt;&lt;googlecode:deploy&gt;&gt;&gt; Mojo
+* The &lt;&lt;&lt;license-validator:validate-licenses&gt;&gt;&gt; Mojo
 
   This mojo has no default invocation phase set, therefore you will have to call it explicitly
-  using &lt;&lt;&lt;googlecode:deploy&gt;&gt;&gt;
+  using &lt;&lt;&lt;license-validator:validate-licenses&gt;&gt;&gt;
 
-  In most cases, you are willing to invoke this mojo when you call the &lt;&lt;&lt;deploy&gt;&gt;&gt; phase of
-  the default build lifecycle. In order to do that, you can configure the plugin to attach the deploy goals
-  to the deploy phase of the build lifecycle:
+  In most cases, you are willing to invoke this mojo when you call the &lt;&lt;&lt;validate&gt;&gt;&gt; phase of
+  the default build lifecycle. In order to do that, you can configure the plugin to attach the :validate-licenses goal
+  to the validate phase of the build lifecycle:
 
 +---+
 [...]
 &lt;pluginManagement&gt;
-      &lt;plugin&gt;
-        &lt;groupId&gt;googlecode.maven.plugin&lt;/groupId&gt;
-        &lt;artifactId&gt;maven-googlecode-plugin&lt;/artifactId&gt;
+    &lt;plugin&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
         &lt;executions&gt;
-          &lt;execution&gt;
-            &lt;phase&gt;deploy&lt;/phase&gt;
-            &lt;goals&gt;
-              &lt;goal&gt;deploy&lt;/goal&gt;
-            &lt;/goals&gt;
-          &lt;/execution&gt;
+            &lt;execution&gt;
+                &lt;phase&gt;validate&lt;/phase&gt;
+                &lt;goals&gt;
+                    &lt;goal&gt;validate-licenses&lt;/goal&gt;
+                &lt;/goals&gt;
+            &lt;/execution&gt;
         &lt;/executions&gt;
-      &lt;/plugin&gt;
+    &lt;/plugin&gt;
 &lt;/pluginManagement&gt;
+
 [...]
 +---+
 
   Once you've configured your plugin target phase, your project's artifact will only require
-  invocation of the &lt;&lt;&lt;deploy&gt;&gt;&gt; phase of the build:
+  invocation of the &lt;&lt;&lt;validate&gt;&gt;&gt; phase of the build:
 
 +---+
-mvn deploy
+mvn validate
 +---+
 
   To enable this mojo to function you must add the plugin in your pom &lt;&lt;&lt;&lt;plugins&gt;&gt;&gt;&gt; section and provide valid credentials for your googlecode
@@ -138,13 +139,21 @@ mvn deploy
 +---+
 [...]
 &lt;plugins&gt;
-        [...]
+    [...]
     &lt;plugin&gt;
-        &lt;artifactId&gt;maven-googlecode-plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
         &lt;configuration&gt;
-                &lt;site&gt;
-                        &lt;id&gt;google.download&lt;/id&gt;
-                &lt;/site&gt;
+            &lt;bannedLicenses&gt;
+                &lt;value&gt;The Terribly Encumbring License&lt;/value&gt;
+            &lt;/bannedLicenses&gt;
+            &lt;allowedLicenses&gt;
+                &lt;value&gt;The Apache Software License, Version 2.0&lt;/value&gt;
+            &lt;/allowedLicenses&gt;
+            &lt;allowedUnlicensed&gt;
+                &lt;value&gt;javax.servlet:servlet-api:jar:2.5&lt;/value&gt;
+                &lt;value&gt;javax\.servlet\.jsp:jsp-api:jar:.*&lt;/value&gt;
+            &lt;/allowedUnlicensed&gt;
         &lt;/configuration&gt;
     &lt;/plugin&gt;
     [...]
@@ -152,68 +161,34 @@ mvn deploy
 [...]
 +---+
 
-  Now, you can specify a server definition in your &lt;&lt;&lt;settings.xml&gt;&gt;&gt;
-  to provide authentication information this server.
-  Your server section might look like this:
-
-+---+
-[...]
-&lt;server&gt;
-        &lt;id&gt;google.download&lt;/id&gt;
-        &lt;username&gt;user&lt;/username&gt;
-        &lt;password&gt;passwd&lt;/password&gt;
-&lt;/server&gt;
-[...]
-+---+
-
-  Unfortunately, Maven doesn't currently support hashed or encrypted passwords
-  in the &lt;&lt;&lt;settings.xml&gt;&gt;&gt;.
-
-  Once you have correctly setup authentication for your googlecode account, your project's artifact
-  will only require invocation of the &lt;&lt;&lt;googlecode:deploy&gt;&gt;&gt; phase of the build to publish your deliverable:
-
-+---+
-mvn googlecode:deploy
-+---+
-
-  Using the previous default simple configuration, your project deliverable will uploaded the following way:
-
-  * upload url: default googlecode root upload url
-
-  * project name: &lt;&lt;&lt;artifactId&gt;&gt;&gt; for stand alone project, root project &lt;&lt;&lt;artifactId&gt;&gt;&gt; for a module of a multi-module project
-
-  * no summary description
-
-  * no label attached
-
-  * the file will be uploaded using the name: &lt;&lt;&lt;artifiactId&gt;&gt;&gt;-&lt;&lt;&lt;version&gt;&gt;&gt;.type
-
-  []
 
 ** Optional Parameters
 
-  The default behavior of the plugin can be modified by overrinding default parameters values.
+  The default behaviour of the plugin can be modified by overriding default parameters values.
 
   In the following samples the parameters are set in the &lt;&lt;&lt;&lt;plugins&gt;&gt;&gt;&gt; definition section,
   but they can also freely be set in the &lt;&lt;&lt;&lt;pluginManagment&gt;&gt;&gt;&gt; section of your pom. On multi-modules projects,
   definition of the custom configuration will most likely be in the &lt;&lt;&lt;&lt;pluginManagment&gt;&gt;&gt;&gt; section of the enclosing pom.
 
-*** Upload url
+*** Banned Licenses
 
-  The location of the upload server can be changed to another &lt;&lt;&lt;url&gt;&gt;&gt; in order to do this, just specify an alternate &lt;&lt;&lt;url&gt;&gt;&gt; in the &lt;&lt;&lt;&lt;site&gt;&gt;&gt;&gt; tag.
-  This is mainly useful for testing purposes.
+  List of strings representing exact matches, or regexp matches, to license names
+  from licenses whose existence in a dependency will cause the build to fail.
+  The only way that a project with a licensed matching one of these banned license
+  entries can be allowed is if it also has an alternative license matching an
+  allowedLicense entry.
 
 +---+
 [...]
 &lt;plugins&gt;
         [...]
     &lt;plugin&gt;
-        &lt;artifactId&gt;maven-googlecode-plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
         &lt;configuration&gt;
-                &lt;site&gt;
-                        &lt;id&gt;google.download&lt;/id&gt;
-                        &lt;url&gt;http://my-alternate-url&lt;/url&gt;
-                &lt;/site&gt;
+            &lt;bannedLicenses&gt;
+                &lt;value&gt;The Terribly Encumbring License&lt;/value&gt;
+            &lt;/bannedLicenses&gt;
         &lt;/configuration&gt;
     &lt;/plugin&gt;
     [...]
@@ -221,22 +196,25 @@ mvn googlecode:deploy
 [...]
 +---+
 
-*** Googlecode project name
+*** Allowed Licenses
 
-  In case you use a different than the googlecode name for your project, you can specify an alternate name for your googlecode project
-  by setting the &lt;&lt;&lt;&lt;googlecode-name&gt;&gt;&gt;&gt; tag the following way:
+  List of strings represesnting exact matches, or regexp matches, to license names
+  from licenses whose existence in a dependency marks that dependency as explicitly acceptable.
+  This is especially useful for cases where you have dual licenses projects in your
+  dependency which have both an unacceptable license, and an acceptable one, such as
+  dual CDDL/BSD licensed projects.
 
 +---+
 [...]
 &lt;plugins&gt;
-        [...]
+    [...]
     &lt;plugin&gt;
-        &lt;artifactId&gt;maven-googlecode-plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
         &lt;configuration&gt;
-                &lt;site&gt;
-                        &lt;id&gt;google.download&lt;/id&gt;
-                &lt;/site&gt;
-                &lt;googlecode-name&gt;my_googlecode_project_name&lt;/googlecode-name&gt;
+            &lt;allowedLicenses&gt;
+                &lt;value&gt;The Apache Software License, Version 2.0&lt;/value&gt;
+            &lt;/allowedLicenses&gt;
         &lt;/configuration&gt;
     &lt;/plugin&gt;
     [...]
@@ -244,21 +222,27 @@ mvn googlecode:deploy
 [...]
 +---+
 
-*** Summary
+*** Allowed unlicensed dependencies
 
-  You can add a summary to your upload by specifying the summary parameter.
+  By providing a list of strings which are matched either directly or as regexp
+  against the dependencies project Id formatted as 'groupId:artifactId:type:version',
+  dependencies which are lacking license information can be explicitly marked as
+  acceptable.
+  This is due to the necessity of coping with certain (Sun) projects which are still
+  lacking license information in their pom definition.
 
 +---+
 [...]
 &lt;plugins&gt;
-        [...]
+    [...]
     &lt;plugin&gt;
-        &lt;artifactId&gt;maven-googlecode-plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
         &lt;configuration&gt;
-                &lt;site&gt;
-                        &lt;id&gt;google.download&lt;/id&gt;
-                &lt;/site&gt;
-                &lt;summary&gt;my comments&lt;/summary&gt;
+            &lt;allowedUnlicensed&gt;
+                &lt;value&gt;javax.servlet:servlet-api:jar:2.5&lt;/value&gt;
+                &lt;value&gt;javax\.servlet\.jsp:jsp-api:jar:.*&lt;/value&gt;
+            &lt;/allowedUnlicensed&gt;
         &lt;/configuration&gt;
     &lt;/plugin&gt;
     [...]
@@ -266,25 +250,75 @@ mvn googlecode:deploy
 [...]
 +---+
 
-*** Labels
+*** Including or excluding transitive dependencies
 
-  You can add some labels to your upload the following way:
+  Whilst the default method of operation is to validate licenses on transitive as
+  well as direct dependencies, it is possible by setting 'includeTransitiveDependencies'
+  to false, to check only the direct project dependencies.
+
+  Can't think why someone would want to do that though - if anyone does, please
+  enlighten me of the use-case.
 
 +---+
 [...]
 &lt;plugins&gt;
-        [...]
+    [...]
     &lt;plugin&gt;
-        &lt;artifactId&gt;maven-googlecode-plugin&lt;/artifactId&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
         &lt;configuration&gt;
-                &lt;site&gt;
-                        &lt;id&gt;google.download&lt;/id&gt;
-                &lt;/site&gt;
-                &lt;labels&gt;
-                        &lt;label&gt;maven&lt;/label&gt;
-                        &lt;label&gt;java&lt;/label&gt;
-                        [...]
-                &lt;/labels&gt;
+            &lt;includeTransitiveDependencies&gt;false&lt;/includeTransitiveDependencies&gt;
+        &lt;/configuration&gt;
+    &lt;/plugin&gt;
+    [...]
+&lt;/plugins&gt;
+[...]
++---+
+
+*** Allowing dependencies which have neither banned or allowed licenses
+
+  Whilst the default method of operation is to require dependencies to be clearly
+  either allowed or banned, it is possible to set the 'allowUnrecognised' property
+  to true in order to instead allow dependencies to pass through when they are not
+  caught in by either the banned or allowed filters.
+
+  Can't think why someone would want to do that though - if anyone does, please
+  enlighten me of the use-case.
+
++---+
+[...]
+&lt;plugins&gt;
+    [...]
+    &lt;plugin&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
+        &lt;configuration&gt;
+            &lt;allowUnrecognised&gt;true&lt;/allowUnrecognised&gt;
+        &lt;/configuration&gt;
+    &lt;/plugin&gt;
+    [...]
+&lt;/plugins&gt;
+[...]
++---+
+
+*** Failing on first unacceptable license or checking and reporting all failures
+
+  It is possible to either drop out on the first dependency which fails the license
+  criteria, or to proceed through and fail only once all dependencies have been checked.
+
+  This may well be desirable in some cases to avoid unnecessary cycles of attempting
+  validation to find one license fail at a time, and instead use the error notifications
+  output by the plugin to do a single sweep to resolve license issues.
+
++---+
+[...]
+&lt;plugins&gt;
+    [...]
+    &lt;plugin&gt;
+        &lt;groupId&gt;com.scee.otg&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-license-enforcer-plugin&lt;/artifactId&gt;
+        &lt;configuration&gt;
+            &lt;failFast&gt;false&lt;/failFast&gt;
         &lt;/configuration&gt;
     &lt;/plugin&gt;
     [...]
