@@ -1,0 +1,262 @@
+~~
+~~ Copyright (C) 2011 tdarby <tim.darby.uk@googlemail.com>
+~~
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~
+~~         http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+~~
+
+------
+  Usage
+  ------
+  Tim Darby
+  ------
+  September 2009
+  ------
+
+Usage
+
+* Introduction
+
+  The License Validator Plugin has only one function that will validate the dependencies on your
+  project
+  This plugin is intended to be run during the maven <<<validate>>> phase of the build lifecycle
+  and is implemented using the <<<license-validator:validate-licenses>>> mojo.
+
+* The <<<license-validator:validate-licenses>>> Mojo
+
+  This mojo has no default invocation phase set, therefore you will have to call it explicitly
+  using <<<license-validator:validate-licenses>>>
+
+  In most cases, you are willing to invoke this mojo when you call the <<<validate>>> phase of
+  the default build lifecycle. In order to do that, you can configure the plugin to attach the :validate-licenses goal
+  to the validate phase of the build lifecycle:
+
++---+
+[...]
+<pluginManagement>
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <executions>
+            <execution>
+                <phase>validate</phase>
+                <goals>
+                    <goal>validate-licenses</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
+</pluginManagement>
+
+[...]
++---+
+
+  Once you've configured your plugin target phase, your project's artifact will only require
+  invocation of the <<<validate>>> phase of the build:
+
++---+
+mvn validate
++---+
+
+  To enable this mojo to function you must add the plugin in your pom <<<<plugins>>>> section and provide valid credentials for your googlecode
+  account this have to be done using the server tag of your <<<settings.xml>>> file.
+  This can be done the following way:
+
++---+
+[...]
+<plugins>
+    [...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <bannedLicenses>
+                <value>The Terribly Encumbring License</value>
+            </bannedLicenses>
+            <allowedLicenses>
+                <value>The Apache Software License, Version 2.0</value>
+            </allowedLicenses>
+            <allowedUnlicensed>
+                <value>javax.servlet:servlet-api:jar:2.5</value>
+                <value>javax\.servlet\.jsp:jsp-api:jar:.*</value>
+            </allowedUnlicensed>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
+
+
+** Optional Parameters
+
+  The default behaviour of the plugin can be modified by overriding default parameters values.
+
+  In the following samples the parameters are set in the <<<<plugins>>>> definition section,
+  but they can also freely be set in the <<<<pluginManagment>>>> section of your pom. On multi-modules projects,
+  definition of the custom configuration will most likely be in the <<<<pluginManagment>>>> section of the enclosing pom.
+
+*** Banned Licenses
+
+  List of strings representing exact matches, or regexp matches, to license names
+  from licenses whose existence in a dependency will cause the build to fail.
+  The only way that a project with a licensed matching one of these banned license
+  entries can be allowed is if it also has an alternative license matching an
+  allowedLicense entry.
+
++---+
+[...]
+<plugins>
+  	[...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <bannedLicenses>
+                <value>The Terribly Encumbring License</value>
+            </bannedLicenses>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
+
+*** Allowed Licenses
+
+  List of strings represesnting exact matches, or regexp matches, to license names
+  from licenses whose existence in a dependency marks that dependency as explicitly acceptable.
+  This is especially useful for cases where you have dual licenses projects in your
+  dependency which have both an unacceptable license, and an acceptable one, such as
+  dual CDDL/BSD licensed projects.
+
++---+
+[...]
+<plugins>
+    [...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <allowedLicenses>
+                <value>The Apache Software License, Version 2.0</value>
+            </allowedLicenses>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
+
+*** Allowed unlicensed dependencies
+
+  By providing a list of strings which are matched either directly or as regexp
+  against the dependencies project Id formatted as 'groupId:artifactId:type:version',
+  dependencies which are lacking license information can be explicitly marked as
+  acceptable.
+  This is due to the necessity of coping with certain (Sun) projects which are still
+  lacking license information in their pom definition.
+
++---+
+[...]
+<plugins>
+    [...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <allowedUnlicensed>
+                <value>javax.servlet:servlet-api:jar:2.5</value>
+                <value>javax\.servlet\.jsp:jsp-api:jar:.*</value>
+            </allowedUnlicensed>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
+
+*** Including or excluding transitive dependencies
+
+  Whilst the default method of operation is to validate licenses on transitive as
+  well as direct dependencies, it is possible by setting 'includeTransitiveDependencies'
+  to false, to check only the direct project dependencies.
+
+  Can't think why someone would want to do that though - if anyone does, please
+  enlighten me of the use-case.
+
++---+
+[...]
+<plugins>
+    [...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <includeTransitiveDependencies>false</includeTransitiveDependencies>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
+
+*** Allowing dependencies which have neither banned or allowed licenses
+
+  Whilst the default method of operation is to require dependencies to be clearly
+  either allowed or banned, it is possible to set the 'allowUnrecognised' property
+  to true in order to instead allow dependencies to pass through when they are not
+  caught in by either the banned or allowed filters.
+
+  Can't think why someone would want to do that though - if anyone does, please
+  enlighten me of the use-case.
+
++---+
+[...]
+<plugins>
+    [...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <allowUnrecognised>true</allowUnrecognised>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
+
+*** Failing on first unacceptable license or checking and reporting all failures
+
+  It is possible to either drop out on the first dependency which fails the license
+  criteria, or to proceed through and fail only once all dependencies have been checked.
+
+  This may well be desirable in some cases to avoid unnecessary cycles of attempting
+  validation to find one license fail at a time, and instead use the error notifications
+  output by the plugin to do a single sweep to resolve license issues.
+
++---+
+[...]
+<plugins>
+    [...]
+    <plugin>
+        <groupId>com.scee.otg</groupId>
+        <artifactId>maven-license-enforcer-plugin</artifactId>
+        <configuration>
+            <failFast>false</failFast>
+        </configuration>
+    </plugin>
+    [...]
+</plugins>
+[...]
++---+
